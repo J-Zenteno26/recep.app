@@ -1,5 +1,4 @@
 # RecepApp
-
 Aplicación web para gestión de pedidos desarrollada con React.
 
 ## Funcionalidades
@@ -40,3 +39,6 @@ También se desarrolló como práctica para mejorar habilidades en:
 
 ## Autor
 Jeanette Zenteno Zenteno
+
+## Demo online:
+https://recepapp.vercel.app
