@@ -1,0 +1,88 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstadoPedido {
+  EN_PROCESO
+  ENTREGADO
+  CANCELADO
+}
+
+model Cliente {
+  id_cliente        Int      @id @default(autoincrement())
+  nombre_cliente    String
+  fono_cliente      String?
+  direccion_cliente String?
+
+  pedidos           Pedido[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([nombre_cliente])
+  @@index([fono_cliente])
+}
+
+model Item {
+  id_item      Int      @id @default(autoincrement())
+  nombre_item  String   @unique
+  valor        Int
+  comentario   String?
+  activo       Boolean  @default(true)
+
+  pedidoItems  PedidoItem[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([nombre_item])
+}
+
+model Pedido {
+  id_pedido    Int         @id @default(autoincrement())
+  clienteId    Int
+  cliente      Cliente     @relation(fields: [clienteId], references: [id_cliente], onDelete: Restrict)
+
+  estado       EstadoPedido @default(EN_PROCESO)
+
+  // total puede ser calculado desde PedidoItem, pero guardarlo ayuda a reportes y velocidad
+  total        Int
+
+  fecha_retiro DateTime    // alternativa: Date + Time (Postgres), pero Prisma lo maneja fácil con DateTime
+  // Si prefieres separar fecha/hora, lo hacemos después (te explico cómo).
+
+  items        PedidoItem[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([clienteId])
+  @@index([estado])
+  @@index([fecha_retiro])
+}
+
+model PedidoItem {
+  id_pedido_item  Int    @id @default(autoincrement())
+
+  pedidoId        Int
+  pedido          Pedido @relation(fields: [pedidoId], references: [id_pedido], onDelete: Cascade)
+
+  itemId          Int
+  item            Item   @relation(fields: [itemId], references: [id_item], onDelete: Restrict)
+
+  cantidad        Int    @default(1)
+  precio_unitario Int
+  comentario_linea String?
+
+  // Evita que el mismo item se repita dos veces en el mismo pedido
+  @@unique([pedidoId, itemId])
+
+  @@index([pedidoId])
+  @@index([itemId])
+}
